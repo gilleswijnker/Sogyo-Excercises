@@ -9,7 +9,7 @@ public class LeapYear {
 				String leapyear = "not a";
 				
 				// Leap year when dividable by four, but not by one hundred
-				if (year % 4 == 0 && year % 100 != 0) {
+				if (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) {
 					leapyear = "a";
 				}
 				System.out.print("The year " + year + " is " + leapyear + " leap year.");
