@@ -55,7 +55,9 @@ class Fibonacci {
 	}
 }
 
-class UserInput {
+final class UserInput {
+	private UserInput() {};
+	
 	// Get input from user
 	public static int GetUserInput() {
 		Scanner reader = new Scanner(System.in);
