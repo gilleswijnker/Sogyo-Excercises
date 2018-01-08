@@ -1,7 +1,14 @@
 .idea
 *.iml
+.gitignore
 
 target
 
 # Java specific files
 *.class
+
+# IDE files
+.classpath
+.project
+.settings/*
+.vscode/*
