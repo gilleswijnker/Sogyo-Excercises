@@ -1,10 +1,11 @@
+import java.util.ArrayList;
+
 public class FindPrimeTest {
 	// Test class
 	public static void main (String[] args) {
 		try {
 			int n = Integer.parseInt(args[0]);
-			FindPrime p = new FindPrime(n);
-			System.out.print(p.Find());
+			System.out.print(FindPrime.Find(n));
 		}
 		catch (NumberFormatException ex) {
 			throw new IllegalArgumentException("Please give me an integer");
@@ -12,42 +13,36 @@ public class FindPrimeTest {
 	}
 }
 
-class FindPrime {
-	int n;
-
-	/*
-	Included constructor for my own educational purposes: to find out how it works
-	Sets n to be the n-th prime number to find
-	*/
-	public FindPrime(int number) {
-		n = number;
-	}
+final class FindPrime {
+	private static ArrayList<Long> foundPrimes = new ArrayList<Long>();
+	
+	private void FindPrime() {};
 	
 	// Method to find the n-th prime number
-	public long Find() {
-		if (n == 1) return 2; // first prime number
-		
-		long k = 1;
+	public static long Find(int nthPrimeNumber) {
+		long number = 1;
 
 		/*
 		Strategy:
-		Go until n, finding out each prime number on the way
+		Go until n-th prime number, finding out each prime number on the way
 		*/
-		for (int i = 1; i < n; i++) {
-			while (!IsPrime(++k));
+		for (int i = 1; i <= nthPrimeNumber; i++) {
+			while (!IsPrime(++number));
 		}
-		return k;
+		return number;
 	}
 
-	// Check to see if a given number if prime
-	boolean IsPrime(long n) {
-		// skip all even numbers
-		if (n % 2 == 0) return false;
-		
-		// loop only odd numbers
-		for (long i = 3; i*i <= n; i += 2) {
+	/* Check to see if a given number if prime
+	 * Strategy: if a number is NOT a prime, it is always dividable by at least one other prime number
+	 */
+	private static boolean IsPrime(long n) {
+		// loop all already found primes
+		for (long i : foundPrimes) {
+			if (i*i > n)
+				break;
 			if (n % i == 0) return false;
 		}
+		foundPrimes.add(n);
 		return true;
 	}
 }
