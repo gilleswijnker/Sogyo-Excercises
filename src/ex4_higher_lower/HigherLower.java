@@ -31,6 +31,9 @@ class GuessingGame {
 	private int guessesLeft;
 	private GeneralPlayer player1;
 	private GeneralPlayer player2;
+	private enum GuessOutcome {
+		HIGHER, LOWER, CORRECT
+	}
 
 	// constructors
 	public GuessingGame(int upperBound, int maxGuesses) {
@@ -42,7 +45,7 @@ class GuessingGame {
 		
 		// initialize numbers
 		toGuess = (int) (Math.random() * upperBound) + 1;
-		// System.out.println("Number is: " + toGuess); // for test purposes only
+		System.out.println("Number is: " + toGuess); // for test purposes only
 		guessesLeft = maxGuesses;
 	}
 	
@@ -72,8 +75,9 @@ class GuessingGame {
 	 */
 	private boolean takeAnotherTurn(GeneralPlayer playerOnTurn) {
 		showGameStatus(guessesLeft, playerOnTurn.getName());
-		if (doGuess(playerOnTurn)) {
-			// correct guess
+		GuessOutcome result = doGuess(playerOnTurn); 
+		
+		if (result == GuessOutcome.CORRECT) {
 			System.out.println("Yeay! You've got it right");
 			return false;
 		} else if (--guessesLeft == 0) {
@@ -82,14 +86,22 @@ class GuessingGame {
 			return false;
 		} else {
 			// wrong guess
-			System.out.println("Nope, that's not the number I've got in mind.");
+			String higherOrLower = result.toString().toLowerCase();
+			System.out.println("Nope, the number I've got in mind is " + higherOrLower);
 			return true;
 		}
 	}
 	
 	// check the player's guess
-	private boolean doGuess(GeneralPlayer playerOnTurn) {
-		return playerOnTurn.Guess() == toGuess;
+	private GuessOutcome doGuess(GeneralPlayer playerOnTurn) {
+		int guess = playerOnTurn.Guess();
+		if (guess == toGuess) {
+			return GuessOutcome.CORRECT;
+		} else if (guess < toGuess) {
+			return GuessOutcome.HIGHER;
+		} else {
+			return GuessOutcome.LOWER;
+		}
 	}
 	
 	// print game status
