@@ -1,10 +1,8 @@
 public class MyLists {
 	public static void main(String[] args) {
-		MyListClass c = new MyListClass();
-		
 		// sub-exercise 1
 		System.out.println("\nEx 1");
-		int[] list = c.GenerateRandomList(10);
+		int[] list = MyListClass.GenerateRandomList(10);
 		System.out.println(MyListClass.ListToString(list, " "));
 		
 		// sub-exercise 2
@@ -38,7 +36,9 @@ public class MyLists {
 	}
 }
 
-class MyListClass {
+final class MyListClass {
+	private MyListClass() {};
+
 	// interfaces for lambda-functions
 	private interface FindValueHelper {
 		public abstract int chooseValue(int valueOne, int valueTwo);
@@ -51,18 +51,18 @@ class MyListClass {
 	////////////////////////////////////////////
 	// Generate a list filled with random ints /
 	////////////////////////////////////////////
-	public int[] GenerateRandomList(int size, int upperBound) {
+	public static int[] GenerateRandomList(int size, int upperBound) {
 		int[] list = new int[size];
 		for (int i = 0; i < size; i++)
 			list[i] = (int) (Math.random() * upperBound) + 1;
 		return list;
 	}
 	
-	public int[] GenerateRandomList(int size) {
+	public static int[] GenerateRandomList(int size) {
 		return GenerateRandomList(size, 100);
 	}
 	
-	public int[]  GenerateRandomList() {
+	public static int[]  GenerateRandomList() {
 		return GenerateRandomList(10);
 	}
 	
@@ -94,22 +94,22 @@ class MyListClass {
 	public static int FindAddLowestTwo(int[] list) {
 		int[] minValues = new int[2];
 		
-		if (list[0] < list[1]) {
-			minValues[0] = list[0];
-			minValues[1] = list[1];
-		} else {
-			minValues[0] = list[1];
-			minValues[1] = list[0];
-		}
+		boolean b = list[0] < list[1];
+		minValues[0] = list[b ? 0 : 1];
+		minValues[1] = list[b ? 1 : 0];
 		
+		/* Strategy:
+		 * 	Compare each value in 'list' to values stored in 'minValues'
+		 * 	Update 'minValues', when needed, to always hold the lowest two
+		 * 	encountered values.
+		 */
 		for (int i = 2; i < list.length; i++) {
 			int value = list[i];
 			if (value < minValues[0]) { 
 				int tempValue = minValues[0];
 				minValues[0] = value;
-				value = tempValue;
-			}
-			if (value < minValues[1])
+				minValues[1] = tempValue;
+			} else if (value < minValues[1])
 				minValues[1] = value;
 		}
 		
@@ -120,51 +120,59 @@ class MyListClass {
 	////////////////
 	// apply filter/
 	////////////////
+	
+	// filter is a lambda function supplied by user
 	public static int[] FilterNumbers(int[] list, FindFilterHelper filter) {
-		return FilterNumberIterator(list, new int[0], 0, filter);
+		return FilterNumberRecursion(list, new int[0], 0, filter);
 	}
 	
-	private static int[] FilterNumberIterator(int[] originalList, int[] filteredList, int index, FindFilterHelper filter) {
-		if (index > originalList.length - 1) return filteredList;
+	// apply the filter, and return a list of numbers complying to the given filter
+	private static int[] FilterNumberRecursion(int[] originalList, int[] filteredList, int index, FindFilterHelper filter) {
+		if (index == originalList.length) return filteredList;
 	
+		// if value comlies to filter, append it to 'filteredList'
 		int value = originalList[index];
-		if (filter.isValueFiltered(value)) {
+		if (filter.isValueFiltered(value))
 			filteredList = AppendToList(filteredList, value);
-		}
-		return FilterNumberIterator(originalList, filteredList, index + 1, filter);
+		return FilterNumberRecursion(originalList, filteredList, index + 1, filter);
 	}
 	
+	// create a list that's one longer, copy all values and append the given value
 	private static int[] AppendToList(int[] list, int value) {
-		// create a list that's one longer, copy all values and append the given value
 		int lengthList = list.length + 1;
 		int[] returnList = new int[lengthList];
 	
 		// copy
-		for (int i = 1; i < lengthList; i++) {
+		for (int i = 1; i < lengthList; i++)
 			returnList[i - 1] = list[i - 1];
-		}
+
 		// append
 		returnList[lengthList - 1] = value;
 		return returnList;
 	}
 	
-	////////////////
+	///////////////
 	// BubbleSort /
-	////////////////
+	///////////////
 	public static int[] BubbleSort(int[] list) {
-		int swaps = 1;
-		while (swaps != 0) {
-			for (int i = 0; i < list.length - 1; i++) {
-				swaps = 0;
-				if (list[i] < list[i+1]) {
-					swaps++;
-					int t = list[i];
-					list[i] = list[i+1];
-					list[i+1] = t;
-				}
+		return BubbleSortRecursion(list, true);
+	}
+	
+	// recursively apply the bubble sorting algorithm
+	private static int[] BubbleSortRecursion(int[] list, boolean needsSorting) {
+		if (!needsSorting) return list;
+		needsSorting = false;
+		
+		// the actual BubbleSort occurs here
+		for (int i = 0; i < list.length - 1; i++ ) {
+			if (list[i] > list[i + 1]) {
+				int t = list[i];
+				list[i] = list[i + 1];
+				list[i + 1] = t;
+				needsSorting = true;
 			}
 		}
-		return list;
+		return BubbleSortRecursion(list, needsSorting);
 	}
 	
 	////////////////////////////////
@@ -172,9 +180,8 @@ class MyListClass {
 	////////////////////////////////
 	public static String ListToString(int [] list, String sep) {
 		String returnString = "";
-		for (int i : list) {
+		for (int i : list)
 			returnString += Integer.toString(i) + sep;
-		}
 		return returnString.trim();
 	}
 }
