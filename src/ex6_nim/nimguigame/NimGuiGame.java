@@ -4,38 +4,127 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import nim.*;
+import java.util.Enumeration;
+import java.util.ArrayList;
 
 public class NimGuiGame {
-	JButton buttonPick;
+	private JFrame frame;
+	private JButton buttonPick;
+	private JLabel label;
+	private JLabel computersTurn;
+	private JLabel gameState;
+	private Nim game;
+	private ArrayList<GuiGameListener> listeners = new ArrayList<GuiGameListener>();
 	
 	// radio buttons
-	JRadioButton option1 = new JRadioButton("1");
-	JRadioButton option2 = new JRadioButton("2");
-	JRadioButton option3 = new JRadioButton("3");
-	JRadioButton option4 = new JRadioButton("4");
+	ButtonGroup group;
+	ArrayList<JRadioButton> options = new ArrayList<JRadioButton>();
 	
 	public static void main(String[] args) {
-		Nim test = new Nim();
-		NimGuiGame game = new NimGuiGame();
-		game.go();
+		NimGuiGame gamegui = new NimGuiGame();
+		gamegui.play(false);
 	}
-	
+
+	// click on the 'pick' button
 	private class ButtonListener implements ActionListener {
 		public void actionPerformed(ActionEvent event) {
-			System.out.println("check");
+			if (!executeTurn()) return;
+			if (!game.doWeHaveALoser()) game.nextTurn();
+			
+			frame.repaint();
 		}
 	}
 	
-	public void go() {
-		JFrame frame = new JFrame("Play nim");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	private boolean executeTurn() {
+		byte numberMatches = getNumberMatches();
+		if (numberMatches == 0) return false;
+
+		try {
+			game.playerOnTurn.pickMatches(numberMatches);
+		}
+		catch (InvalidNumberOfMatchesException ex) {
+			// cannot happen in GUI
+		}
+		return true;
+	}
+	
+	private byte getNumberMatches() {
+		// Which button is selected
+		for (Enumeration<AbstractButton> buttons = group.getElements(); buttons.hasMoreElements();) {
+            JRadioButton button = (JRadioButton) buttons.nextElement();
+
+            if (button.isSelected())
+                return Byte.parseByte(button.getText());
+        }
+		return 0;
+	}
+		
+	public void play(boolean singlePlayerGame) {
+		game = new Nim();
+		game.addListener(new ComputersTurnListener());
+		game.setupGame(singlePlayerGame);
+		setupGui();
+		game.nextTurn();
+	}
+	
+	// the panel which contains all game elements
+	private class GamePanel extends JPanel {
+		public void paintComponent(Graphics g) {
+			g.setColor(Color.GRAY);
+			g.fillRect(1, 1, this.getWidth() - 2, this.getHeight() - 2);
+			
+			// update information on screen
+			for (byte b = 1; b <= 4; b++) {
+				options.get(b - 1).setEnabled(b <= game.getMatchesLeft());
+			}
+			group.clearSelection();
+			gameState.setText(game.getMatchesLeft() + " matches left");
+			if (game.doWeHaveALoser())
+				label.setText("Player " + game.getLoser() + " looses!");
+			else
+				label.setText("Turn: " + game.playerOnTurn.getName());
+		}
+	}
+	
+	// listen to the game signaling it's the computers turn
+	private class ComputersTurnListener implements GameListener {
+		public void computersTurn() {
+			try {
+				byte n = game.playerOnTurn.pickMatches();
+				computersTurn.setText("Computer took " + n + " matches");
+			}
+			catch (InvalidNumberOfMatchesException ex) {
+				// cannot happen in GUI
+			}
+			game.nextTurn();
+		};
+	}
+	
+	// listen to the game window being closed
+	private class CloseWindowListener extends WindowAdapter {
+		public void windowClosing(WindowEvent event) {
+			for (GuiGameListener l: listeners) {
+				l.guiGameClosed();
+			}
+            event.getWindow().dispose();
+		}
+	}
+	
+	public void setupGui() {
+		frame = new JFrame("Play nim");
+		frame.setBackground(Color.GRAY);
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frame.addWindowListener(new CloseWindowListener());
 		
 		// top label
-		JLabel label = new JLabel("Who's turn is it?");
+		label = new JLabel();
 		
 		// center
 		JPanel gameStatePanel = new JPanel();
-		JLabel gameState = new JLabel("11 matches left");
+		computersTurn = new JLabel();
+		gameState = new JLabel();
+		gameStatePanel.setLayout(new BoxLayout(gameStatePanel, BoxLayout.Y_AXIS));
+		gameStatePanel.add(computersTurn);
 		gameStatePanel.add(gameState);
 		
 		// pick-button
@@ -43,18 +132,17 @@ public class NimGuiGame {
 		buttonPick.addActionListener(new ButtonListener());
 		
 		// group buttons
-		ButtonGroup group = new ButtonGroup();
-		group.add(option1);
-		group.add(option2);
-		group.add(option3);
-		group.add(option4);
+		group = new ButtonGroup();
+		JPanel radioPanel = new JPanel();
+		
+		for (byte b = 1; b <= 4; b++) {
+			JRadioButton btn = new JRadioButton(Byte.toString(b));
+			options.add(btn);
+			group.add(btn);
+			radioPanel.add(btn);
+		}
 		
 		// display radio buttons and pick-button in same frame
-		JPanel radioPanel = new JPanel();
-		radioPanel.add(option1);
-		radioPanel.add(option2);
-		radioPanel.add(option3);
-		radioPanel.add(option4);
 		radioPanel.add(buttonPick);
 		
 		// construct game panel
@@ -69,11 +157,8 @@ public class NimGuiGame {
 		frame.setSize(300, 300);
 		frame.setVisible(true);
 	}
-}
-
-class GamePanel extends JPanel {
-	public void paintComponent(Graphics g) {
-		g.setColor(Color.GRAY);
-		g.fillRect(1, 1, this.getWidth() - 2, this.getHeight() - 2);
+	
+	public void addListener(GuiGameListener listener) {
+		listeners.add(listener);
 	}
 }

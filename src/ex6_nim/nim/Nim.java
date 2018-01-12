@@ -1,10 +1,12 @@
 package nim;
 
 import java.util.Scanner;
+import java.util.ArrayList;
 
 public class Nim {
 	private byte matchesLeft;
 	private boolean singlePlayerGame;
+	private ArrayList<GameListener> listeners = new ArrayList<GameListener>();
 	
 	// players
 	private Player player1;
@@ -13,23 +15,6 @@ public class Nim {
 	public Player playerOnTurn;
 
 	// classes
-	public class InvalidNumberOfMatchesException extends Exception {};
-
-	private abstract class Player {
-		private String name;
-		
-		public Player(String name) {
-			this.name = name;
-		}
-		
-		public void pickMatches(byte n) throws InvalidNumberOfMatchesException {};
-		public void pickMatches() throws InvalidNumberOfMatchesException {};
-		
-		public String getName() {
-			return name;
-		}
-	}
-	
 	private class HumanPlayer extends Player {
 		public HumanPlayer(String name) {
 			super(name);
@@ -47,9 +32,10 @@ public class Nim {
 			super(name);
 		}
 		
-		public void pickMatches() throws InvalidNumberOfMatchesException {
+		public byte pickMatches() throws InvalidNumberOfMatchesException {
 			byte n = pickAmount[matchesLeft - 1];
 			pickMatchesFromTable(n);
+			return n;
 		}
 	}
 	
@@ -80,11 +66,11 @@ public class Nim {
 		System.out.println("\nPlayer on turn: " + game.playerOnTurn.getName());
 		while (!validTurn(game)) {};
 		System.out.println("There are " + game.getMatchesLeft() + " matches left.");
-		if (game.getDoWeHaveALoser()) {
+		if (game.doWeHaveALoser()) {
 			System.out.println(String.format("%s took the last match.\n%<s looses!", game.getLoser()));
 			return false;
 		}
-		game.nextPlayer();
+		game.nextTurn();
 		return true;
 	}
 	
@@ -111,7 +97,6 @@ public class Nim {
 		this.singlePlayerGame = singlePlayerGame;
 		matchesLeft = 11;
 		loser = null;
-		playerOnTurn = Math.random() < 0.5 ? player1 : player2;
 	}
 	
 	private void pickMatchesFromTable(byte n) throws InvalidNumberOfMatchesException {
@@ -125,20 +110,35 @@ public class Nim {
 		}
 	}
 	
-	public void nextPlayer() {
+	public void nextTurn() {
+		if (playerOnTurn == null)
+			playerOnTurn = Math.random() < 0.5 ? player1 : player2; 
 		playerOnTurn = playerOnTurn.equals(player1) ? player2 : player1;
+		signalComputersTurn();
+	}
+	
+	public void signalComputersTurn() {
+		if (playerOnTurn.getName() == "computer") {
+			for (GameListener listener : listeners) {
+				listener.computersTurn();
+			}
+		}
 	}
 	
 	public int getMatchesLeft() {
 		return matchesLeft;
 	}
 	
-	public boolean getDoWeHaveALoser() {
+	public boolean doWeHaveALoser() {
 		return loser != null;
 	}
 	
 	public String getLoser() {
 		return loser.getName();
+	}
+	
+	public void addListener(GameListener listener) {
+		listeners.add(listener);
 	}
 }
 
