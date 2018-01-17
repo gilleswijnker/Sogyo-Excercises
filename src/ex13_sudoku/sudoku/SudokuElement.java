@@ -6,28 +6,27 @@ public abstract class SudokuElement {
 	public ArrayList<SudokuCell> myCells = new ArrayList<>();
 		
 	public boolean update() {
-		// first strategy: remove values that are known / inspect cell to only allow a single value
 		boolean isUpdated = false;
 		
 		for (SudokuCell cell : myCells) {
+			// first strategy: remove values that are known
 			if (cell.getValue() != 0 && removeValueFromCells(cell.getValueBit()))
 				isUpdated = true;
-			if (cell.hasOnlyOneAllowedValue()) {
-				cell.setValueBit(cell.getAllowedValuesBit());
-				isUpdated = true;
-			}
-		}
-		
-		// second strategy: place values that are only allowed at one place
-		int singlePlaceValues = findSinglePlaceValues();
-		for (SudokuCell cell : myCells) {
+			
+			// second strategy: place values that are only allowed at one place
+			int singlePlaceValues = findSinglePlaceValues();
 			int value = cell.getAllowedValuesBit() & singlePlaceValues;
 			if (value != 0) {
 				cell.setValueBit(value);
 				isUpdated = true;
 			}
+			
+			// inspect cell to only allow a single value
+			if (cell.hasOnlyOneAllowedValue()) {
+				cell.setValueBit(cell.getAllowedValuesBit());
+				isUpdated = true;
+			}
 		}
-		
 		return isUpdated;
 	}
 	
