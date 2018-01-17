@@ -1,6 +1,7 @@
 package sudoku;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.oracle.jrockit.jfr.InvalidValueException;
 
@@ -32,11 +33,49 @@ public class SudokuGame {
 	public SudokuGame(String sudokuAsString) {
 		if (sudokuAsString.length() != 81)
 			throw new IllegalArgumentException("sudoku string contains " + sudokuAsString.length() + " chars...");
+		
+		initElements();
+		fillElements(sudokuAsString);
+	}
+	
+	public boolean solve() {
+		boolean movesMade = false;
+		loopsMade++;
+				
+		for (SudokuSquare square : mySquares)
+			movesMade |= square.update();
+				
+		for (SudokuRow row: myRows)
+			movesMade |= row.update();
+		
+		for (SudokuColumn col: myColumns)
+			movesMade |= col.update();
+		
+		for (SudokuSquare square : mySquares) {
+			System.out.println(Arrays.toString(square.getUniqueColumnValues()));
+			System.out.println(Arrays.toString(square.getUniqueRowValues()));
+			System.out.println();
+		}
+				
+		return movesMade;
+	}
+	
+	public String toString() {
+		String result = "";
+		for (SudokuRow row : myRows)
+			result += row.toString() + "\n";
+		return result;
+	}
+	
+	private void initElements() {
 		for (int i = 0; i <= 8; i++) {
 			mySquares.add(new SudokuSquare());
 			myRows.add(new SudokuRow());
 			myColumns.add(new SudokuColumn());
 		}
+	}
+	
+	private void fillElements(String sudokuAsString) {
 		for (int row = 0; row <= 8; row++) {
 			for (int col = 0; col <= 8; col++) {
 				int charAt = row * 9 + col;
@@ -49,29 +88,6 @@ public class SudokuGame {
 				mySquares.get(squareIndex).myCells.add(cell);
 			}
 		}
-	}
-	
-	public boolean solve() {
-		boolean movesMade = false;
-		loopsMade++;
-		
-		for (SudokuSquare square : mySquares)
-			movesMade |= square.update();
-		
-		for (SudokuRow row: myRows)
-			movesMade |= row.update();
-		
-		for (SudokuColumn col: myColumns)
-			movesMade |= col.update();
-		
-		return movesMade;
-	}
-	
-	public String toString() {
-		String result = "";
-		for (SudokuRow row : myRows)
-			result += row.toString() + "\n";
-		return result;
 	}
 	
 	private int getSquareIndex(int row, int col) {

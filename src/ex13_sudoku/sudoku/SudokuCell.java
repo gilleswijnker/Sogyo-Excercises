@@ -24,6 +24,7 @@ public class SudokuCell {
 	public void removeFromAllowedValues(int value) {
 		String textValue = Integer.toString(value);
 		int index = allowedValues.indexOf(textValue);
+		if (index < 0) return;
 		allowedValues.deleteCharAt(index);
 		detectSingleValueAllowed();
 	}
@@ -61,6 +62,8 @@ public class SudokuCell {
 		return allowedValues.toString();
 	}
 	
+	// check if only one value allowed in this cell.
+	// if so, set that value to be the value
 	private void detectSingleValueAllowed() {
 		if (hasOnlyOneAllowedValue())
 			setValue(allowedValues.toString());
