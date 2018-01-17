@@ -2,6 +2,8 @@ package sudoku;
 
 import java.util.ArrayList;
 
+import com.oracle.jrockit.jfr.InvalidValueException;
+
 public class SudokuGame {
 	private ArrayList<SudokuSquare> mySquares = new ArrayList<>();
 	private ArrayList<SudokuRow> myRows = new ArrayList<>();
@@ -9,14 +11,27 @@ public class SudokuGame {
 	private int loopsMade = 0;
 	
 	public static void main(String[] args) {
-		SudokuGame game = new SudokuGame("000820090500000000308040007100000040006402503000090010093004000004035200000700900");
+		/*
+		 * Examples
+		 *   	   000820090500000000308040007100000040006402503000090010093004000004035200000700900
+		 *   	   000272283000000900002608500050800030010040070040003090006405700001000000530012000
+		 * pzl 1:  320041000100000008008005000000003100006000400005700000000900800580000009000680075
+		 */
+		SudokuGame game = new SudokuGame("320041000100000008008005000000003100006000400005700000000900800580000009000680075");
 		System.out.println(game);
 		while (game.solve()) {};
 		System.out.println();
 		System.out.println(game);
+		System.out.println(game.getLoopsMade());
+	}
+	
+	public int getLoopsMade() {
+		return loopsMade;
 	}
 	
 	public SudokuGame(String sudokuAsString) {
+		if (sudokuAsString.length() != 81)
+			throw new IllegalArgumentException("sudoku string contains " + sudokuAsString.length() + " chars...");
 		for (int i = 0; i <= 8; i++) {
 			mySquares.add(new SudokuSquare());
 			myRows.add(new SudokuRow());
@@ -37,19 +52,18 @@ public class SudokuGame {
 	}
 	
 	public boolean solve() {
-		boolean movesMade = true;
+		boolean movesMade = false;
 		loopsMade++;
 		
 		for (SudokuSquare square : mySquares)
-			movesMade = square.update();
+			movesMade |= square.update();
 		
 		for (SudokuRow row: myRows)
-			movesMade = row.update();
+			movesMade |= row.update();
 		
 		for (SudokuColumn col: myColumns)
-			movesMade = col.update();
+			movesMade |= col.update();
 		
-		System.out.print("\r" + loopsMade);
 		return movesMade;
 	}
 	

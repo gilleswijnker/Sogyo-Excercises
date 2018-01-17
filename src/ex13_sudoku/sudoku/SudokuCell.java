@@ -1,21 +1,20 @@
 package sudoku;
 
 public class SudokuCell {
-	private int allowedValues;
+	private StringBuilder allowedValues = new StringBuilder("123456789");
 	private int myValue = 0;
 	
 	/////////////////
 	// constructors /
 	/////////////////
 	public SudokuCell(int value) {
-		myValue = value;
-		if (value == 0)
-			allowedValues = 0b111111111;
+		if (value != 0) {
+			myValue = value;
+			allowedValues.setLength(0);
+		}
 	}
 	
-	public SudokuCell() {
-		this(0);
-	}
+	public SudokuCell() {}
 	
 	////////////
 	// methods /
@@ -23,50 +22,47 @@ public class SudokuCell {
 	
 	// Remove a value from the values allowed for this cell
 	public void removeFromAllowedValues(int value) {
-		//int bitmaskValue = 1 << (value - 1);
-		int bitmaskValue = allowedValues & value;
-		allowedValues ^= bitmaskValue;
+		String textValue = Integer.toString(value);
+		int index = allowedValues.indexOf(textValue);
+		allowedValues.deleteCharAt(index);
+		detectSingleValueAllowed();
 	}
 	
 	public boolean isValueAllowed(int value) {
-		return (allowedValues & value) != 0;
+		String textValue = Integer.toString(value);
+		return isValueAllowed(textValue);
+	}
+	
+	public boolean isValueAllowed(String value) {
+		return allowedValues.indexOf(value) >= 0;
 	}
 	
 	public boolean hasOnlyOneAllowedValue() {
-		return getAllowedValues().length() == 1;
+		return allowedValues.length() == 1;
 	}
 	
 	// return my value
 	public int getValue() {
 		return myValue;
 	}
-	
-	public int getValueBit() {
-		return (myValue == 0) ? 0 : 1 << (myValue - 1);
-	}
-	
-	// set my value
-	public void setValueBit(int value) {
-		setValue((int) (Math.log(value) / Math.log(2)) + 1);
-	}
-	
+		
+	// set my value	
 	public void setValue(int value) {
 		if (value != 0)
-			allowedValues = 0;
+			allowedValues.setLength(0);
 		myValue = value;
 	}
 	
-	public String getAllowedValues() {
-		String result = "";
-		for (int i = 1; i <= 9; i++) {
-			if ((1 << (i - 1) & allowedValues) != 0) {
-				result += i + " ";
-			}
-		}
-		return result.trim();
+	public void setValue(String value) {
+		setValue(Integer.parseInt(value));
 	}
 	
-	public int getAllowedValuesBit() {
-		return allowedValues;
+	public String getAllowedValues() {
+		return allowedValues.toString();
+	}
+	
+	private void detectSingleValueAllowed() {
+		if (hasOnlyOneAllowedValue())
+			setValue(allowedValues.toString());
 	}
 }

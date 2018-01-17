@@ -7,54 +7,57 @@ public abstract class SudokuElement {
 		
 	public boolean update() {
 		boolean isUpdated = false;
+		isUpdated |= removeKnownValues();
+		isUpdated |= placeSingleAllowedValues();
+		return isUpdated;
+	}
+	
+	public boolean removeKnownValues() {
+		// remove values that are known
+		boolean isUpdated = false;
 		
 		for (SudokuCell cell : myCells) {
-			// first strategy: remove values that are known
-			if (cell.getValue() != 0 && removeValueFromCells(cell.getValueBit()))
+			int value = cell.getValue();
+			if (value != 0 && removeValueFromCells(value))
 				isUpdated = true;
-			
-			// second strategy: place values that are only allowed at one place
-			int singlePlaceValues = findSinglePlaceValues();
-			int value = cell.getAllowedValuesBit() & singlePlaceValues;
-			if (value != 0) {
-				cell.setValueBit(value);
-				isUpdated = true;
-			}
-			
-			// inspect cell to only allow a single value
-			if (cell.hasOnlyOneAllowedValue()) {
-				cell.setValueBit(cell.getAllowedValuesBit());
-				isUpdated = true;
+		}
+		return isUpdated;
+	}
+	
+	public boolean placeSingleAllowedValues() {
+		// place values that are only allowed at one place
+		boolean isUpdated = false;
+		
+		String singlePlaceValues = findSinglePlaceValues();
+		for (SudokuCell cell : myCells) {
+			for (int i = 0; i < singlePlaceValues.length(); i++) {
+				String value = singlePlaceValues.substring(i, i + 1);
+				if (cell.isValueAllowed(value)) {
+					cell.setValue(value);
+					isUpdated = true;
+				}
 			}
 		}
 		return isUpdated;
 	}
 	
-	public int findSinglePlaceValues() {
+	public String findSinglePlaceValues() {
 		// Find values that are allowed at only one place
-		int bitValue = 0;
 		int[] values = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+		String result = "";
+
 		for (SudokuCell cell : myCells) {
-			int allowedValues = cell.getAllowedValuesBit();
-			for (int i = 0; i <= 8; i++) {
-				if ((1 << i & allowedValues) != 0)
-					values[i] += 1;
+			String allowedValues = cell.getAllowedValues();
+			for (int i = 0; i < allowedValues.length(); i++) {
+				int index = Integer.parseInt(allowedValues.substring(i, i + 1)) - 1;
+				values[index]++;
 			}
 		}
+		
 		for (int i = 0; i <= 8; i++)
 			if (values[i] == 1)
-				bitValue += 1 << i;
-		return bitValue;
-	}
-	
-	private String bitsToString(int value) {
-		String result = "";
-		for (int i = 1; i <= 9; i++) {
-			if ((1 << (i - 1) & value) != 0) {
-				result += i + " ";
-			}
-		}
-		return result.trim();
+				result += Integer.toString(i + 1);
+		return result;
 	}
 	
 	public boolean removeValueFromCells(int value) {
