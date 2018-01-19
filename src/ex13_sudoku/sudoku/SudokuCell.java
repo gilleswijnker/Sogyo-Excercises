@@ -62,6 +62,10 @@ public class SudokuCell {
 		return allowedValues.toString();
 	}
 	
+	public void setAllowedValues(String values) {
+		allowedValues = new StringBuilder(values);
+	}
+	
 	// check if only one value allowed in this cell.
 	// if so, set that value to be the value
 	private void detectSingleValueAllowed() {

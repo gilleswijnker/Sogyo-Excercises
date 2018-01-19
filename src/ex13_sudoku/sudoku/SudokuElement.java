@@ -63,24 +63,38 @@ public abstract class SudokuElement {
 	}
 	
 	public boolean removeValueFromCells(int value) {
-		boolean valueRemoved = false;
+		boolean isUpdated = false;
 		
-		for (SudokuCell cell : myCells) {
-			if (cell.getValue() == 0 && cell.isValueAllowed(value)) {
-				cell.removeFromAllowedValues(value);
-
-				// if cell goes from blank to a value, remove that value
-				// from the allowed list of other cells
-				if (cell.getValue() != 0)
-					removeValueFromCells(cell.getValue());
-				valueRemoved = true;
-			}
-		}
-		return valueRemoved;
+		for (SudokuCell cell : myCells)
+			isUpdated |= removeValueFromCells(cell, value);
+		return isUpdated;
 	}
 	
 	public boolean removeValueFromCells(String value) {
 		return removeValueFromCells(Integer.parseInt(value));
+	}
+	
+	public boolean removeValueFromCells(SudokuCell cell, String values) {
+		boolean isUpdated = false;
+		for (int i = 0; i < values.length(); i++) {
+			int value = Integer.parseInt(values.substring(i, i + 1));
+			isUpdated |= removeValueFromCells(cell, value);
+		}
+		return isUpdated;
+	}
+	
+	public boolean removeValueFromCells(SudokuCell cell, int value) {
+		boolean isUpdated = false;
+		if (cell.getValue() == 0 && cell.isValueAllowed(value)) {
+			cell.removeFromAllowedValues(value);
+
+			// if cell goes from blank to a value, remove that value
+			// from the allowed list of other cells
+			if (cell.getValue() != 0)
+				removeValueFromCells(cell.getValue());
+			isUpdated = true;
+		}
+		return isUpdated;
 	}
 	
 	public String toString() {
