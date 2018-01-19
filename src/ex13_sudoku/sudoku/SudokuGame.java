@@ -58,13 +58,14 @@ public class SudokuGame {
 		for (SudokuColumn col: myColumns)
 			movesMade |= col.update();
 
+		// do next strategy only when the 'simple' strategies above yield no result 
 		if (!movesMade) {
+			// each square
 			for (int i = 0; i <= 8; i++) {
 				String[] uniquePerColumn = mySquares.get(i).getUniqueColumnValues();
 				String[] uniquePerRow = mySquares.get(i).getUniqueRowValues();
 				for (int j = 0; j <= 2; j++) {
 					if (uniquePerColumn[j].length() == 0) continue;
-					
 					movesMade |= mySquares.get(SudokuHelper.columnFromIndex(i, 3)).removeValues(j, -1, uniquePerColumn[j]);
 					movesMade |= mySquares.get(SudokuHelper.columnFromIndex(i, 6)).removeValues(j, -1, uniquePerColumn[j]);
 					movesMade |= mySquares.get(SudokuHelper.rowFromIndex(i, 1)).removeValues(-1, j, uniquePerRow[j]);
@@ -73,30 +74,44 @@ public class SudokuGame {
 			}
 		}
 		
+		// too bad, but I'm not valid anymore :(
 		if (!isSolutionValid())
 			return GameState.INVALID;
+		
+		// yeay! I'm solved!
 		if (isSolved()) 
 			return GameState.SOLVED;
+		
+		// was not possible to make a move. Start guessing
 		if (!movesMade)
-			iterativeSolve();
+			return iterativeSolve();
+		
 		return solve();
 	}
 	
-	private void iterativeSolve() {
-		for (int i = 0; i <= 8; i++) {
-			for (int j = 0; j <= 8; j++) {
-				String allowedValues = myRows.get(i).myCells.get(j).getAllowedValues();
+	private GameState iterativeSolve() {
+		// guess a value, and try to solve the sudoku
+		for (int row = 0; row <= 8; row++) {
+			// for each col
+			for (int col = 0; col <= 8; col++) {
+				// 'hard' reference to cell of interest: creating a new reference variable failed
+				String allowedValues = myRows.get(row).myCells.get(col).getAllowedValues();
 				if (allowedValues.length() > 0) {
 					for (int k = 0; k < allowedValues.length(); k++) {
+						// store current state
 						String currentSudoku = toString().replaceAll("[\r\n\t ]", "");
-						myRows.get(i).myCells.get(j).setValue(allowedValues.substring(k, k + 1));
-						if (solve() == GameState.SOLVED) return;
+						myRows.get(row).myCells.get(col).setValue(allowedValues.substring(k, k + 1));
+						GameState gameState = solve();
+						if (gameState == GameState.SOLVED) return GameState.SOLVED;
+						
+						// restore last state 
 						initElements();
 						fillElements(currentSudoku);
 					}
 				}
 			}
 		}
+		return GameState.UNSOLVED;
 	}
 	
 	public String toString() {
@@ -107,6 +122,7 @@ public class SudokuGame {
 	}
 	
 	public boolean isSolved() {
+		// are all cells filled with a value?
 		for (int i = 0; i <= 8; i++)
 			for (int j = 0; j <= 8; j++)
 				if (mySquares.get(i).myCells.get(j).getValue() == 0)
@@ -115,6 +131,7 @@ public class SudokuGame {
 	}
 	
 	public boolean isSolutionValid() {
+		// is the sudoku table still valid (no duplicates in an element)
 		for (SudokuSquare square : mySquares)
 			if (!isElementValid(square)) return false;
 				
@@ -128,6 +145,7 @@ public class SudokuGame {
 	}
 	
 	private boolean isElementValid(SudokuElement element) {
+		// find out if an does not contain duplicate values
 		ArrayList<Integer> values = new ArrayList<>();
 		for (SudokuCell cell : element.myCells) {
 			Integer value = new Integer(cell.getValue());
@@ -140,6 +158,7 @@ public class SudokuGame {
 	}
 	
 	private void initElements() {
+		// initialize the sudoku elements
 		mySquares = new ArrayList<>();
 		myRows = new ArrayList<>();
 		myColumns = new ArrayList<>();
@@ -151,6 +170,7 @@ public class SudokuGame {
 	}
 	
 	private void fillElements(String sudokuAsString) {
+		// fill the sudoku elements based on the supplied starting string
 		for (int row = 0; row <= 8; row++) {
 			for (int col = 0; col <= 8; col++) {
 				int charAt = row * 9 + col;
