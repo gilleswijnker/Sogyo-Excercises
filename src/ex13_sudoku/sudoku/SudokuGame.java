@@ -19,6 +19,7 @@ public class SudokuGame {
 		 * pzl 1:  320041000100000008008005000000003100006000400005700000000900800580000009000680075
 		 * pzl 2:  003080001020001000100300800200009070006240000050000100300900008000056090040000700
 		 * pzl 3:  020604030300050904004700600000000768000000000148000000002005400607090005050307020
+		 * pzl 4:  800000000003600000070090200050007000000045700000100030001000068008500010090000400
 		 */
 		SudokuGame game = new SudokuGame(args[0]);
 		System.out.println(game);
@@ -28,9 +29,9 @@ public class SudokuGame {
 			// too much recursion: no solution found :(
 			System.out.println("I'm sorry, I could not find a solution");
 		}
-		System.out.println();
+//		System.out.println(game.isSolutionValid());
 		System.out.println(game);
-		System.out.println(game.getLoopsMade());
+//		System.out.println(game.getLoopsMade());
 	}
 	
 	public int getLoopsMade() {
@@ -73,6 +74,12 @@ public class SudokuGame {
 				}
 			}
 		}
+		System.out.print("\r" + toString().replaceAll("[\r\n\t ]", ""));
+//		System.out.print(myRows.get(0).myCells.get(3).getValue());
+//		if (!isSolutionValid()) {
+//			System.out.println(this);
+//			System.exit(0);
+//		}
 		
 		// too bad, but I'm not valid anymore :(
 		if (!isSolutionValid())
@@ -86,33 +93,43 @@ public class SudokuGame {
 		if (!movesMade)
 			return iterativeSolve();
 		
+		// oke, we're advancing. Try again
 		return solve();
 	}
 	
 	private GameState iterativeSolve() {
 		// guess a value, and try to solve the sudoku
-		for (int row = 0; row <= 8; row++) {
-			// for each col
-			for (int col = 0; col <= 8; col++) {
-				// 'hard' reference to cell of interest: creating a new reference variable failed
-				String allowedValues = myRows.get(row).myCells.get(col).getAllowedValues();
-				if (allowedValues.length() > 0) {
+		for (int options = 2; options <= 9; options++) {
+			for (int row = 0; row <= 8; row++) {
+				for (int col = 0; col <= 8; col++) {
+					// 'hard' reference to cell of interest: creating a new reference variable failed
+					String allowedValues = myRows.get(row).myCells.get(col).getAllowedValues();
+					if (allowedValues.length() != options) continue;
 					for (int k = 0; k < allowedValues.length(); k++) {
 						// store current state
 						String currentSudoku = toString().replaceAll("[\r\n\t ]", "");
-						myRows.get(row).myCells.get(col).setValue(allowedValues.substring(k, k + 1));
+						String guessValue = allowedValues.substring(k, k + 1);
+//						System.out.println("(" + row + " " + col + ") " + guessValue + " " + depth);
+						myRows.get(row).myCells.get(col).setValue(guessValue);
+						depth++;
 						GameState gameState = solve();
+						depth--;
 						if (gameState == GameState.SOLVED) return GameState.SOLVED;
 						
-						// restore last state 
+						// restore last state
 						initElements();
 						fillElements(currentSudoku);
+						myRows.get(row).myCells.get(col).removeFromAllowedValues(guessValue);
 					}
 				}
 			}
 		}
 		return GameState.UNSOLVED;
 	}
+	
+//	private void getLeastOptions() {
+//		
+//	}
 	
 	public String toString() {
 		String result = "";

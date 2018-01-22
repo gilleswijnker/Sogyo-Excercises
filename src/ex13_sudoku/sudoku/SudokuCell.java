@@ -23,7 +23,11 @@ public class SudokuCell {
 	// Remove a value from the values allowed for this cell
 	public void removeFromAllowedValues(int value) {
 		String textValue = Integer.toString(value);
-		int index = allowedValues.indexOf(textValue);
+		removeFromAllowedValues(textValue);
+	}
+	
+	public void removeFromAllowedValues(String value) {
+		int index = allowedValues.indexOf(value);
 		if (index < 0) return;
 		allowedValues.deleteCharAt(index);
 		detectSingleValueAllowed();
