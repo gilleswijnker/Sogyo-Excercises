@@ -31,6 +31,7 @@ public class Quotes {
 		return splittedText;
 	}
 	
+	// Get a random quote from the specified file
 	public String[] getRandomQuote(String filename, String sep) {
 		List<String[]> listOfQuotes = readQuotes(filename, sep);
 		int lineToPick = new Random().nextInt(listOfQuotes.size());
@@ -38,6 +39,7 @@ public class Quotes {
 	}
 	
 	public static void main(String[] args) {
+		// NOTE: assumes file has two 'columns', first one containing the author, second the quote 
 		// Quotes are in quotes.csv, which can be found in the 'main' directory of this project
 		String[] quoteOfTheDay = new Quotes().getRandomQuote("quotes.csv", "\t");
 		
@@ -51,14 +53,14 @@ public class Quotes {
 		
 		// Quote: starts with a capital and ends with a punctuation
 		String quote = RegexHelper.replacePattern("^(\\S)(.*)(.)$", quoteOfTheDay[1], 
-				(buffer, matcher) -> {
-					String firstLetter = matcher.group(1).toUpperCase(); // Start with a capital
-					String closingCharacter = matcher.group(3);
-					if (!RegexHelper.endsWith(".?!", closingCharacter))
-						closingCharacter += ".";
-					matcher.appendReplacement(buffer, firstLetter + matcher.group(2) + closingCharacter);
-				}
-			);
+			(buffer, matcher) -> {
+				String firstLetter = matcher.group(1).toUpperCase(); // Start with a capital
+				String closingCharacter = matcher.group(3);
+				if (!RegexHelper.endsWith(".?!", closingCharacter))
+					closingCharacter += ".";
+				matcher.appendReplacement(buffer, firstLetter + matcher.group(2) + closingCharacter);
+			}
+		);
 		
 		// Get the date info. Could be in a separate method (which produces the to-be-printed string)
 		// but seems pointless in this scenario
