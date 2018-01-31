@@ -5,3 +5,5 @@ target
 
 # Java specific files
 *.class
+*.classpath
+*.project
