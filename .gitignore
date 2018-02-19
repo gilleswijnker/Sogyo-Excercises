@@ -7,6 +7,7 @@ target
 # Java specific files
 *.class
 
+
 # IDE files
 .classpath
 .project
